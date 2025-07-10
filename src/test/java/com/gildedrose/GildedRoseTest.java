@@ -11,6 +11,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class GildedRoseTest {
     static final String AGED_BRIE_NAME = "Aged Brie";
     static final int SULFURAS_QUALITY = 80;
+    static final String SULFURAS_NAME = "Sulfuras, Hand of Ragnaros";
+    static final String BACKSTAGE_PASSES = "Backstage passes to a TAFKAL80ETC concert";
     private static final int CLASSIC_ITEM_MAX_QUALITY = 50;
     private static final String CLASSIC_ITEM_NAME = "Classic Item";
     private GildedRose gildedRose;
@@ -136,7 +138,7 @@ class GildedRoseTest {
     @Test
     void updateQualitySulfurasQualityNeverChanges() {
         int sellInStart = 10;
-        IItem sulfuras = new ItemAdapter("Sulfuras, Hand of Ragnaros", sellInStart, GildedRoseTest.SULFURAS_QUALITY);
+        IItem sulfuras = new ItemAdapter(GildedRoseTest.SULFURAS_NAME, sellInStart, GildedRoseTest.SULFURAS_QUALITY);
         this.items.add(sulfuras);
 
         this.gildedRose = new GildedRose(this.getArrayItems());
@@ -148,4 +150,36 @@ class GildedRoseTest {
         }
     }
 
+    @Test
+    void updateQualityBackstagePassesIncreasesQuality() {
+        int sellInStart = 20;
+        int qualityStart = 20;
+        IItem backstagePasses = new ItemAdapter(GildedRoseTest.BACKSTAGE_PASSES, sellInStart, qualityStart);
+        this.items.add(backstagePasses);
+
+        this.gildedRose = new GildedRose(this.getArrayItems());
+        int previousQuality = qualityStart;
+        for (int day = 0; day < sellInStart * 2; day++) {
+            this.gildedRose.updateQuality();
+            if (sellInStart - day <= 0) {
+                assertEquals(0,
+                             backstagePasses.getQuality(),
+                             "Backstage passes quality should drop to 0 after sellIn reaches 0.");
+            } else if (sellInStart - day <= 5) {
+                assertEquals(Math.min(GildedRoseTest.CLASSIC_ITEM_MAX_QUALITY, previousQuality + 3),
+                             backstagePasses.getQuality(),
+                             "Backstage passes quality should increase by 3 each day when sellIn is less than 5.");
+            } else if (sellInStart - day <= 10) {
+                assertEquals(Math.min(GildedRoseTest.CLASSIC_ITEM_MAX_QUALITY, previousQuality + 2),
+                             backstagePasses.getQuality(),
+                             "Backstage passes quality should increase by 2 each day when sellIn is less than 10.");
+            } else {
+                assertEquals(Math.min(GildedRoseTest.CLASSIC_ITEM_MAX_QUALITY, previousQuality + 1),
+                             backstagePasses.getQuality(),
+                             "Backstage passes quality should increase by 1 each day when sellIn is greater than 10.");
+            }
+            previousQuality = backstagePasses.getQuality();
+
+        }
+    }
 }
